@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IES Digital Webstore - Secure Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --ies-blue: #0056b3;
+            --ethio-green: #28a745;
+            --ies-gold: #ffc107;
+        }
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .navbar { background-color: var(--ies-blue); border-bottom: 4px solid var(--ies-gold); }
+        .hero-section { background: linear-gradient(rgba(0,86,179,0.8), rgba(0,86,179,0.8)), url('https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1350&q=80'); background-size: cover; color: white; padding: 60px 0; }
+        
+        /* Category Sidebar */
+        .sidebar-title { font-weight: bold; font-size: 0.9rem; color: #555; text-transform: uppercase; margin-bottom: 15px; }
+        .category-link { text-decoration: none; color: #333; display: block; padding: 10px; border-radius: 5px; transition: 0.2s; cursor: pointer;}
+        .category-link:hover, .category-link.active { background-color: var(--ies-blue); color: white; }
+        
+        /* Cards */
+        .standard-card { border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-radius: 12px; transition: 0.3s; }
+        .standard-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .price-tag { color: var(--ethio-green); font-weight: bold; font-size: 1.2rem; }
+        .desc-link { font-size: 0.85rem; color: var(--ies-blue); cursor: pointer; text-decoration: underline; }
+        .nav-logo { height: 40px; margin-right: 12px; border-radius: 4px; background: white; padding: 2px; }
+        /* Payment Selection */
+        .payment-card { border: 2px solid #eee; transition: 0.2s; cursor: pointer; }
+        .payment-card:hover, .payment-card.selected { border-color: var(--ies-blue); background-color: #f0f7ff; }
+
+        /* Admin & Success UI */
+        #admin-panel { display: none; background: white; border-radius: 12px; padding: 25px; margin-top: 20px; border: 1px solid #ddd; }
+        .status-pending { background: #fff3cd; color: #856404; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; }
+        
+        /* Watermark Preview Styles */
+        .watermark-box { 
+            border: 1px solid #dee2e6; background: #fff; padding: 40px 20px; 
+            position: relative; overflow: hidden; border-radius: 8px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+        .watermark-text { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 2.2rem; font-weight: bold; color: rgba(255,0,0,0.1); 
+            white-space: nowrap; pointer-events: none; z-index: 5; text-transform: uppercase;
+        }
+        .pdf-content-preview { position: relative; z-index: 1; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="ies2.html">
+            <img src="logo.jpg" alt="IES Logo" class="nav-logo">
+            <b>IES</b> Training Portal
+        </a>
+        <div class="ms-auto d-flex align-items-center">
+            <a href="ies.html" class="btn btn-link text-white text-decoration-none me-3">
+                <i class="fas fa-graduate"></i> Purchase Training
+            </a>
+            <button class="btn btn-warning position-relative" data-bs-toggle="modal" data-bs-target="#cartModal">
+                <i class="fas fa-shopping-cart"></i> Cart
+                <span id="cart-count" class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle">0</span>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<header class="hero-section text-center">
+    <div class="container">
+        <h1 class="display-5 fw-bold">Access Ethiopian Standards Instantly</h1>
+        <p class="lead">Search, Pay via Telebirr, and Download Digitally.</p>
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-8">
+                <div class="input-group input-group-lg">
+                    <input type="text" class="form-control" placeholder="Search by ES number (e.g., ES 6098) or keyword...">
+                    <button class="btn btn-warning" type="button">Search</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <aside class="col-lg-3">
+            <div class="card p-3 shadow-sm mb-4 border-0">
+                <p class="sidebar-title">Categories</p>
+                <nav id="category-list">
+                    <a class="category-link active" onclick="filter('All')">All Standards</a>
+                    <a class="category-link" onclick="filter('Agri')">Agriculture & Food</a>
+                    <a class="category-link" onclick="filter('Const')">Construction</a>
+                    <a class="category-link" onclick="filter('Elect')">Electrotechnical</a>
+                    <a class="category-link" onclick="filter('Quality')">Quality Management</a>
+                </nav>
+            </div>
+            <div class="card p-3 shadow-sm border-0">
+                <p class="sidebar-title">User Profile</p>
+                <div class="small">
+                    <strong>ID Status:</strong> <span class="text-success fw-bold">Verified <i class="fas fa-check-circle"></i></span><br>
+                    <strong>Entity:</strong> Construction Corp ET<br>
+                    <strong>TIN:</strong> 0012345678
+                </div>
+            </div>
+        </aside>
+
+        <main class="col-lg-9">
+            <div id="user-view">
+                <div class="row g-4" id="standards-grid"></div>
+            </div>
+            <div id="admin-panel">
+                <h4>Admin Approval Queue</h4>
+                <div class="table-responsive bg-white p-3 rounded shadow-sm mt-3">
+                    <table class="table align-middle">
+                        <thead class="table-light"><tr><th>Entity</th><th>Standard</th><th>Purpose</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="admin-table"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="modal fade" id="reasonModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Purchase Justification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="fas fa-clipboard-question fa-3x text-primary mb-3"></i>
+                <p>IES requires a reason for purchase for <strong><span id="target-std"></span></strong>.</p>
+                <select class="form-select mb-3" id="purchase-reason">
+                    <option value="Product Certification">Product Certification</option>
+                    <option value="System Certification (ISO)">System Certification (ISO)</option>
+                    <option value="Academic Research">Academic Research</option>
+                    <option value="Industrial Compliance">Industrial Compliance</option>
+                </select>
+                <textarea class="form-control" placeholder="Optional: Provide more details for faster approval..." rows="3"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary w-100" onclick="completeAddToCart()">Request to Add</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="cartModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Checkout & Payment</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <div id="cart-list" class="mb-3"></div>
+            <div class="d-flex justify-content-between fw-bold border-top pt-2"><span>Total Amount:</span><span id="cart-total" class="text-success">0 ETB</span></div>
+            <h6 class="mt-4">Payment Method:</h6>
+            <div class="row g-2 mt-2">
+                <div class="col-6">
+                    <div class="payment-card p-3 text-center rounded" onclick="selectPay(this, 'Telebirr')">
+                        <img src="https://upload.wikimedia.org/wikipedia/en/thumb/9/93/Telebirr_Logo.png/220px-Telebirr_Logo.png" height="30" class="mb-1">
+                        <div class="small fw-bold">Telebirr</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="payment-card p-3 text-center rounded" onclick="selectPay(this, 'CBE Birr')">
+                        <i class="fas fa-university text-primary fa-2x mb-1"></i>
+                        <div class="small fw-bold">CBE Birr</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-success w-100 py-3 fw-bold" id="checkout-btn" onclick="submitToAdmin()" disabled>Pay and Generate License</button></div>
+    </div></div>
+</div>
+
+<div class="modal fade" id="downloadModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-body text-center p-5">
+                <div class="text-success mb-3"><i class="fas fa-check-circle fa-5x"></i></div>
+                <h2 class="fw-bold">Payment Successful!</h2>
+                <p class="text-muted">Transaction ID: <b>#IES-TXN-99201</b></p>
+                
+                <div class="watermark-box my-4">
+                    <div class="watermark-text" id="watermark-display">LICENSED TO CONSTRUCTION CORP ET</div>
+                    
+                    <div class="text-start opacity-25 pdf-content-preview">
+                        <h4 class="mb-1 fw-bold text-dark" id="success-std-code">ETHIOPIAN STANDARD ES 3968:2020</h4>
+                        <p class="small text-dark mb-4" id="success-std-title">Cement Specifications and Quality Control</p>
+                        <hr>
+                        <p><b>1. SCOPE AND APPLICATION</b><br>This standard specifies the mechanical, physical, and chemical requirements for cement...</p>
+                        <p><b>2. NORMATIVE REFERENCES</b><br>The following documents are referred to in the text in such a way that some or all of their content constitutes requirements...</p>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning py-2 small mb-4">
+                    <i class="fas fa-lock me-2"></i> This document is digitally signed and watermarked for <b>Construction Corp ET</b>. Unauthorized sharing is a violation of IES policy.
+                </div>
+                
+                <div class="row g-2">
+                    <div class="col-6"><button class="btn btn-primary w-100 py-3" onclick="alert('Downloading Watermarked PDF...')"><i class="fas fa-download me-2"></i>Download PDF</button></div>
+                    <div class="col-6"><button class="btn btn-outline-secondary w-100 py-3" data-bs-dismiss="modal">Close</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="descModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header"><h5 id="descHeader"></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body" id="descBody"></div>
+    </div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    const standards = [
+        {id: 1, cat: 'Agri', code: 'ES 6098:2017', title: 'Export Coffee Standards', price: 450, desc: 'Covers physical and chemical properties required for Grade A export coffee.'},
+        {id: 2, cat: 'Const', code: 'ES 3968:2020', title: 'Cement Specifications', price: 700, desc: 'Mechanical and chemical requirements for Portland cement used in local infrastructure.'},
+        {id: 3, cat: 'Elect', code: 'ES IEC 60034', title: 'Rotating Electrical Machines', price: 1200, desc: 'Safety and performance standards for industrial motors in Ethiopia.'},
+        {id: 4, cat: 'Quality', code: 'ES ISO 9001:2015', title: 'Quality Management', price: 1500, desc: 'International standard for quality systems adopted for Ethiopian businesses.'},
+        {id: 5, cat: 'Agri', code: 'ES 3421:2020', title: 'Honey Quality Specs', price: 300, desc: 'Requirements for processing, labeling, and grading of Ethiopian honey.'},
+        {id: 6, cat: 'Const', code: 'ES 2024:2025', title: 'Reinforcement Steel', price: 850, desc: 'Tensile strength and ductility standards for building construction.'}
+    ];
+
+    let cart = [];
+    let selectedPayMethod = "";
+    let pendingItem = null;
+
+    function renderProducts(filterCat = 'All') {
+        const grid = document.getElementById('standards-grid');
+        grid.innerHTML = '';
+        const filtered = filterCat === 'All' ? standards : standards.filter(s => s.cat === filterCat);
+        filtered.forEach(s => {
+            grid.innerHTML += `
+                <div class="col-md-6">
+                    <div class="card h-100 standard-card">
+                        <div class="card-body">
+                            <span class="badge bg-light text-dark border mb-2">${s.code}</span>
+                            <h5 class="card-title fw-bold">${s.title}</h5>
+                            <span class="desc-link" onclick="showDescription(${s.id})">Full Description</span>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <span class="price-tag">${s.price} ETB</span>
+                                <button class="btn btn-primary btn-sm rounded-pill" onclick="askReason(${s.id})">Add to Order</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+        });
+    }
+
+    function filter(cat) {
+        document.querySelectorAll('.category-link').forEach(el => el.classList.remove('active'));
+        event.target.classList.add('active');
+        renderProducts(cat);
+    }
+
+    function showDescription(id) {
+        const s = standards.find(x => x.id === id);
+        document.getElementById('descHeader').innerText = s.code;
+        document.getElementById('descBody').innerText = s.desc;
+        new bootstrap.Modal(document.getElementById('descModal')).show();
+    }
+
+    function askReason(id) {
+        pendingItem = standards.find(x => x.id === id);
+        document.getElementById('target-std').innerText = pendingItem.code;
+        new bootstrap.Modal(document.getElementById('reasonModal')).show();
+    }
+
+    function completeAddToCart() {
+        const reason = document.getElementById('purchase-reason').value;
+        cart.push({...pendingItem, reason});
+        updateCartUI();
+        bootstrap.Modal.getInstance(document.getElementById('reasonModal')).hide();
+    }
+
+    function updateCartUI() {
+        document.getElementById('cart-count').innerText = cart.length;
+        const list = document.getElementById('cart-list');
+        const totalEl = document.getElementById('cart-total');
+        if(cart.length === 0) {
+            list.innerHTML = "<p class='text-muted text-center'>Cart is empty</p>";
+            totalEl.innerText = "0 ETB";
+        } else {
+            list.innerHTML = cart.map(i => `<div class="d-flex justify-content-between mb-2 small border-bottom pb-1"><span><b>${i.code}</b> - ${i.reason}</span><span class="fw-bold">${i.price} ETB</span></div>`).join('');
+            const total = cart.reduce((sum, i) => sum + i.price, 0);
+            totalEl.innerText = total + " ETB";
+        }
+    }
+
+    function selectPay(el, method) {
+        document.querySelectorAll('.payment-card').forEach(c => c.classList.remove('selected', 'border-primary', 'bg-light'));
+        el.classList.add('selected', 'border-primary', 'bg-light');
+        selectedPayMethod = method;
+        document.getElementById('checkout-btn').disabled = false;
+    }
+
+    function submitToAdmin() {
+        // Update the Success/Watermark Modal with the details of the purchased items
+        if(cart.length > 0) {
+            document.getElementById('success-std-code').innerText = "ETHIOPIAN STANDARD " + cart[0].code;
+            document.getElementById('success-std-title').innerText = cart[0].title;
+            document.getElementById('watermark-display').innerText = "LICENSED TO CONSTRUCTION CORP ET - " + cart[0].code;
+        }
+
+        const adminTable = document.getElementById('admin-table');
+        cart.forEach(item => {
+            adminTable.innerHTML += `
+                <tr>
+                    <td><b>Construction Corp ET</b></td>
+                    <td>${item.code}</td>
+                    <td><span class="status-pending">${item.reason}</span></td>
+                    <td><span class="badge bg-success">${selectedPayMethod}</span></td>
+                    <td><button class="btn btn-sm btn-outline-success" onclick="approve(this)">Approve</button></td>
+                </tr>`;
+        });
+        
+        bootstrap.Modal.getInstance(document.getElementById('cartModal')).hide();
+        new bootstrap.Modal(document.getElementById('downloadModal')).show();
+        
+        cart = []; 
+        updateCartUI();
+    }
+
+    function approve(btn) {
+        btn.parentElement.innerHTML = '<span class="text-success small fw-bold"><i class="fas fa-check-circle"></i> Approved & Sent</span>';
+    }
+
+    function toggleAdmin() {
+        const panel = document.getElementById('admin-panel');
+        const userView = document.getElementById('user-view');
+        if (panel.style.display === 'none' || panel.style.display === '') {
+            panel.style.display = 'block'; userView.style.display = 'none';
+        } else {
+            panel.style.display = 'none'; userView.style.display = 'block';
+        }
+    }
+
+    renderProducts();
+</script>
+</body>
+</html>
+

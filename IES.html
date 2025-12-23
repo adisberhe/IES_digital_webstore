@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IES Training Portal - Secure Booking</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --ies-blue: #0056b3;
+            --ethio-green: #28a745;
+            --ies-gold: #ffc107;
+        }
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .navbar { background-color: var(--ies-blue); border-bottom: 4px solid var(--ies-gold); }
+        .hero-section { background: linear-gradient(rgba(0,86,179,0.8), rgba(0,86,179,0.8)), url('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1350&q=80'); background-size: cover; color: white; padding: 60px 0; }
+        
+        .nav-logo { height: 40px; margin-right: 12px; border-radius: 4px; background: white; padding: 2px; }
+        
+        /* Category Sidebar */
+        .sidebar-title { font-weight: bold; font-size: 0.9rem; color: #555; text-transform: uppercase; margin-bottom: 15px; }
+        .category-link { text-decoration: none; color: #333; display: block; padding: 10px; border-radius: 5px; transition: 0.2s; cursor: pointer;}
+        .category-link:hover, .category-link.active { background-color: var(--ies-blue); color: white; }
+        
+        /* Training Cards */
+        .training-card { border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-radius: 12px; transition: 0.3s; }
+        .training-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .price-tag { color: var(--ethio-green); font-weight: bold; font-size: 1.2rem; }
+        .duration-badge { font-size: 0.75rem; background: #e9ecef; padding: 4px 8px; border-radius: 20px; color: #666; }
+
+        /* Payment Selection */
+        .payment-card { border: 2px solid #eee; transition: 0.2s; cursor: pointer; }
+        .payment-card:hover, .payment-card.selected { border-color: var(--ies-blue); background-color: #f0f7ff; }
+
+        /* Success UI */
+        .watermark-box { 
+            border: 1px solid #dee2e6; background: #fff; padding: 40px 20px; 
+            position: relative; overflow: hidden; border-radius: 8px;
+        }
+        .watermark-text { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 1.8rem; font-weight: bold; color: rgba(0,86,179,0.1); 
+            white-space: nowrap; pointer-events: none; z-index: 5; text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="ies2.html">
+            <img src="logo.jpg" alt="IES Logo" class="nav-logo">
+            <b>IES</b> Training Portal
+        </a>
+        <div class="ms-auto d-flex align-items-center">
+            <a href="ies2.html" class="btn btn-link text-white text-decoration-none me-3">
+                <i class="fas fa-book"></i> Purchase Standards
+            </a>
+            <button class="btn btn-warning position-relative" data-bs-toggle="modal" data-bs-target="#cartModal">
+                <i class="fas fa-shopping-cart"></i> Cart
+                <span id="cart-count" class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle">0</span>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<header class="hero-section text-center">
+    <div class="container">
+        <h1 class="display-5 fw-bold">Professional Standards Training</h1>
+        <p class="lead">Book IES Certified courses and enhance your industrial compliance.</p>
+    </div>
+</header>
+
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <aside class="col-lg-3">
+            <div class="card p-3 shadow-sm mb-4 border-0">
+                <p class="sidebar-title">Training Categories</p>
+                <nav id="category-list">
+                    <a class="category-link active" onclick="filter('All')">All Programs</a>
+                    <a class="category-link" onclick="filter('Quality')">Quality Management</a>
+                    <a class="category-link" onclick="filter('Food')">Food Safety</a>
+                    <a class="category-link" onclick="filter('Lab')">Laboratory Systems</a>
+                </nav>
+            </div>
+            <div class="card p-3 shadow-sm border-0">
+                <p class="sidebar-title">My Registration</p>
+                <div class="small">
+                    <strong>Trainee:</strong> Construction Corp ET<br>
+                    <strong>Status:</strong> Business Verified <i class="fas fa-check-circle text-success"></i>
+                </div>
+            </div>
+        </aside>
+
+        <main class="col-lg-9">
+            <div class="row g-4" id="training-grid">
+                </div>
+        </main>
+    </div>
+</div>
+
+<div class="modal fade" id="reasonModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Course Registration</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body text-center">
+            <p>Select your background for: <strong><span id="target-course"></span></strong></p>
+            <select class="form-select mb-3" id="reg-reason">
+                <option>Professional Advancement</option>
+                <option>Corporate Compliance</option>
+                <option>Internal Auditor Prep</option>
+            </select>
+            <button class="btn btn-primary w-100" onclick="completeAddToCart()">Add to Cart</button>
+        </div>
+    </div></div>
+</div>
+
+<div class="modal fade" id="cartModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Training Checkout</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <div id="cart-list" class="mb-3"></div>
+            <div class="d-flex justify-content-between fw-bold border-top pt-2"><span>Total Fees:</span><span id="cart-total" class="text-success">0 ETB</span></div>
+            <h6 class="mt-4">Payment Method:</h6>
+            <div class="row g-2 mt-2">
+                <div class="col-6"><div class="payment-card p-3 text-center rounded" onclick="selectPay(this, 'Telebirr')"><img src="https://upload.wikimedia.org/wikipedia/en/thumb/9/93/Telebirr_Logo.png/220px-Telebirr_Logo.png" height="30"></div></div>
+                <div class="col-6"><div class="payment-card p-3 text-center rounded" onclick="selectPay(this, 'CBE Birr')"><i class="fas fa-university text-primary fa-2x"></i><div class="small fw-bold">CBE Birr</div></div></div>
+            </div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-success w-100 py-3 fw-bold" id="checkout-btn" onclick="processPayment()" disabled>Pay and Register</button></div>
+    </div></div>
+</div>
+
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content text-center p-5">
+            <i class="fas fa-check-circle fa-5x text-success mb-3"></i>
+            <h2 class="fw-bold">Registration Confirmed!</h2>
+            <p class="text-muted">Your training slot has been reserved. Please find your watermarked admission slip below.</p>
+            
+            <div class="watermark-box my-4">
+                <div class="watermark-text">PAID - IES TRAINING 2025</div>
+                <div class="text-start opacity-50">
+                    <h5 id="success-course-title">ISO 9001:2015 Training</h5>
+                    <p class="small">Attendee: Construction Corp ET<br>Venue: IES Training Center, Addis Ababa<br>Date: To be announced via Email</p>
+                </div>
+            </div>
+
+            <button class="btn btn-primary w-100" onclick="location.reload()">Download Admission Slip</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    const courses = [
+        {id: 201, cat: 'Quality', code: 'ISO 9001:2015', title: 'Quality Management Systems (QMS)', price: 4750, duration: '5 Days'},
+        {id: 202, cat: 'Food', code: 'ISO 22000:2018', title: 'Food Safety Management Systems (FSMS)', price: 4750, duration: '5 Days'},
+        {id: 203, cat: 'Lab', code: 'ISO/IEC 17025:2017', title: 'Laboratory Quality Management', price: 4750, duration: '5 Days'},
+        {id: 204, cat: 'Quality', code: 'ISO 14001:2015', title: 'Environmental Management Systems', price: 4750, duration: '5 Days'},
+        {id: 205, cat: 'Quality', code: 'ISO 45001:2018', title: 'Occupational Health & Safety', price: 4750, duration: '5 Days'}
+    ];
+
+    let cart = [];
+    let selectedPayMethod = "";
+    let pendingCourse = null;
+
+    function renderTraining(filterCat = 'All') {
+        const grid = document.getElementById('training-grid');
+        grid.innerHTML = '';
+        const filtered = filterCat === 'All' ? courses : courses.filter(c => c.cat === filterCat);
+        
+        filtered.forEach(c => {
+            grid.innerHTML += `
+                <div class="col-md-6">
+                    <div class="card h-100 training-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge bg-light text-dark border">${c.code}</span>
+                                <span class="duration-badge"><i class="far fa-clock"></i> ${c.duration}</span>
+                            </div>
+                            <h5 class="card-title fw-bold">${c.title}</h5>
+                            <div class="d-flex justify-content-between align-items-center mt-4">
+                                <span class="price-tag">${c.price} ETB</span>
+                                <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="askReason(${c.id})">Book Now</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+        });
+    }
+
+    function filter(cat) {
+        document.querySelectorAll('.category-link').forEach(el => el.classList.remove('active'));
+        event.target.classList.add('active');
+        renderTraining(cat);
+    }
+
+    function askReason(id) {
+        pendingCourse = courses.find(x => x.id === id);
+        document.getElementById('target-course').innerText = pendingCourse.title;
+        new bootstrap.Modal(document.getElementById('reasonModal')).show();
+    }
+
+    function completeAddToCart() {
+        cart.push(pendingCourse);
+        updateCartUI();
+        bootstrap.Modal.getInstance(document.getElementById('reasonModal')).hide();
+    }
+
+    function updateCartUI() {
+        document.getElementById('cart-count').innerText = cart.length;
+        const list = document.getElementById('cart-list');
+        const totalEl = document.getElementById('cart-total');
+        if(cart.length === 0) {
+            list.innerHTML = "<p class='text-muted text-center'>No courses selected</p>";
+            totalEl.innerText = "0 ETB";
+        } else {
+            list.innerHTML = cart.map(i => `<div class="d-flex justify-content-between mb-2 small border-bottom pb-1"><span>${i.title}</span><span class="fw-bold">${i.price} ETB</span></div>`).join('');
+            const total = cart.reduce((sum, i) => sum + i.price, 0);
+            totalEl.innerText = total + " ETB";
+        }
+    }
+
+    function selectPay(el, method) {
+        document.querySelectorAll('.payment-card').forEach(c => c.classList.remove('selected', 'border-primary', 'bg-light'));
+        el.classList.add('selected', 'border-primary', 'bg-light');
+        selectedPayMethod = method;
+        document.getElementById('checkout-btn').disabled = false;
+    }
+
+    function processPayment() {
+        if(cart.length > 0) document.getElementById('success-course-title').innerText = cart[0].title;
+        bootstrap.Modal.getInstance(document.getElementById('cartModal')).hide();
+        new bootstrap.Modal(document.getElementById('successModal')).show();
+        cart = []; updateCartUI();
+    }
+
+    renderTraining();
+</script>
+</body>
+</html>
